@@ -69,15 +69,24 @@ class Solution:
         if n1 == 0: return self.findSingleSortedArrays(nums2)
         if n2 == 0: return self.findSingleSortedArrays(nums1)
 
-        if n1 == 1 & n2 == 1: return (nums1[0] + nums2[0]) / 2;
+        if n1 == 1 and n2 == 1: return (nums1[0] + nums2[0]) / 2;
 
         maxNums = nums1 if nums1[n1 - 1] > nums2[n2 - 1] else nums2
         minNums = nums1 if nums1[0] < nums2[0] else nums2
         
         if (maxNums is minNums) & (len(maxNums) == 2): 
-            return self.findSingleSortedArrays(nums1 if maxNums is nums2 else nums1);
+            return self.findSingleSortedArrays(nums1 if maxNums is nums2 else nums2);
 
-        maxNums = maxNums[:-1:]
-        minNums = minNums[1:]
+        splitNums1 = nums1
+        splitNums2 = nums2
 
-        return self.findMedianSortedArrays(nums1, nums2)
+        if maxNums is nums1:
+            splitNums1 = splitNums1[:-1:]
+        else:
+            splitNums2 = splitNums2[:-1:]
+        if minNums is nums1:
+            splitNums1 = splitNums1[1:]
+        else:
+            splitNums2 = splitNums2[1:]
+
+        return self.findMedianSortedArrays(splitNums1, splitNums2)
