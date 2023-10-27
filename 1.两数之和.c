@@ -65,9 +65,44 @@
  * Note: The returned array must be malloced, assume caller calls free().
  */
 
+#include <uthash.h>
+
+struct node
+{
+    int num;
+    int index;
+    UT_hash_handle hh;
+};
+
+struct node *nodes = NULL;
+
+void addNode(int num, int index) 
+{
+    struct node *node;
+    
+};
+
+struct node *findNode(int num) 
+{
+    struct node *node;
+    HASH_FIND_INT(nodes, num, node);
+    return node;
+};
 
 int *twoSum(int *nums, int numsSize, int target, int *returnSize)
 {
-    
+
+    struct indexed_num *first_num;
+
+    HASH_ADD_INT(num_map, num, first_num);
+
+    first_num = (struct indexed_num *)malloc(sizeof *first_num);
+    first_num->num = nums[0];
+    first_num->index = 0;
+
+    for (int i = 1; i < numsSize; i++)
+    {
+        /* code */
+    }
 }
 // @lc code=end
