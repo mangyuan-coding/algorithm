@@ -3,6 +3,7 @@
  *
  * [2] Add Two Numbers
  */
+#include "include/type.h"
 
 // @lc code=start
 /**
@@ -12,18 +13,37 @@
  *     struct ListNode *next;
  * };
  */
-
+#include <stdlib.h>
 #include <stdbool.h>
 
-#ifndef NULL
-#define NULL ((void *)0)
-#endif
+const size_t NODE_SIZE = sizeof(struct ListNode);
 
-struct ListNode
+struct ListNode *build(int *val, int length)
 {
-    int val;
-    struct ListNode *next;
-};
+    struct ListNode *head = malloc(NODE_SIZE), *node = head;
+    node->val = val[0];
+    node->next = NULL;
+
+    for (int i = 1; i < length; i++)
+    {
+        node->next = malloc(NODE_SIZE);
+        node = node->next;
+        node->val = val[i];
+        node->next = NULL;
+    }
+    return head;
+}
+
+int listSize(struct ListNode *node)
+{
+    int ret = 0;
+    while (node != NULL)
+    {
+        ret++;
+        node = node->next;
+    }
+    return ret;
+}
 
 struct ListNode *addTwoNumbers(struct ListNode *l1, struct ListNode *l2)
 {
@@ -36,27 +56,70 @@ struct ListNode *addTwoNumbers(struct ListNode *l1, struct ListNode *l2)
         return l1;
     }
 
+    int l1Size = listSize(l1);
+    int l2Size = listSize(l2);
+
     int tmp = 0;
-    struct ListNode *head = malloc(sizeof(struct ListNode)), *node = head;
+    struct ListNode *longer = l1Size >= l2Size ? l1 : l2;
+    struct ListNode *shorter = l1Size < l2Size ? l1 : l2;
+    struct ListNode *ret = longer;
 
     do
     {
-        /* code */
-        int val = l1->val + l2->val;
-        if (tmp != 0)
+        int val = longer->val + tmp;
+        tmp = 0;
+        if (shorter != NULL)
         {
-            val += tmp;
+            val += shorter->val;
+            shorter = shorter->next;
         }
-        if (val / 10 > 0)
-        {
-            tmp = val / 10;
-        }
-        val = val % 10;
 
-        // next step
-        node->next = l1;
-        l1 = l1->next;
-        l2 = l2->next;
-    } while (l1 == NULL && l2 == NULL && tmp == 0);
+        int quotient = val / 10;
+        if (quotient > 0)
+        {
+            tmp = quotient;
+            longer->val = val % 10;
+        }
+        else
+        {
+            longer->val = val;
+        }
+
+        if (longer->next == NULL && tmp > 0)
+        {
+            longer->next = malloc(NODE_SIZE);
+            longer->next->next = NULL;
+            longer->next->val = 0;
+        }
+
+        longer = longer->next;
+
+    } while (longer != NULL);
+
+    return ret;
 }
 // @lc code=end
+
+#include <stdio.h>
+
+int main(int argc, char const *argv[])
+{
+
+    // test-case
+    // [2,4,3]
+    // [5,6,4]
+    int l1Nums[] = {2, 4, 3};
+    struct ListNode *l1 = build(l1Nums, 3);
+    int l2Nums[] = {5, 6, 4};
+    struct ListNode *l2 = build(l2Nums, 3);
+
+    struct ListNode *ret = addTwoNumbers(l1, l2);
+
+    while (ret != NULL)
+    {
+        printf("%d\n", ret->val);
+        ret = ret->next;
+    }
+
+    return 0;
+}
