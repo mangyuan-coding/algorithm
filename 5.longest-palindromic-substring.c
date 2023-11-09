@@ -9,152 +9,115 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-bool is_palindrome(char *s, int left, int right)
+// optimized dynamic-programming-algorithm
+struct pair
 {
-    while (left < right)
-    {
-        /* code */
-        if (s[left] != s[right])
-        {
-            return false;
-        }
-        left++;
-        right--;
-    }
-    return true;
-}
+    int left;
+    int right;
+};
 
+struct pair ***generate(int length)
+{
+    struct pair **ret_one = malloc(sizeof(struct pair) * length);
+    for (int i = 0; i < length; i++)
+    {
+        ret_one[i] = NULL;
+    }
+    struct pair ***ret = malloc(sizeof(ret_one) * length);
+    ret[0] = ret_one;
+    for (int i = 1; i < length; i++)
+    {
+        ret[i] = malloc(sizeof(struct pair) * length);
+        for (int j = 0; j < length; j++)
+        {
+            ret[i][j] = NULL;
+        }
+    }
+    return ret;
+}
 char *longestPalindrome(char *s)
 {
-    int length = strlen(s), left = 0, right = length - 1, retLeft = 0, retRight = 0;
-
-    if (length <= 1)
+    int length = strlen(s);
+    if (length == 0)
+    {
+        return NULL;
+    }
+    if (length == 1)
     {
         return s;
     }
 
-    while (left < length)
+    int cur = 0, distance = 0;
+    struct pair ***record = generate(length);
+
+    while (distance < length)
     {
-        while (right > left)
+        while (cur < length - distance)
         {
-            if (s[left] == s[right])
+            int rcur = cur + distance;
+            if (distance == 0)
             {
-                // check
-                if (is_palindrome(s, left, right) && right - left > retRight - retLeft)
+                record[cur][rcur] = malloc(sizeof(struct pair));
+                record[cur][rcur]->left = cur;
+                record[cur][rcur]->right = rcur;
+            }
+            else if (distance == 1)
+            {
+                if (s[cur] == s[rcur])
                 {
-                    retLeft = left;
-                    retRight = right;
+                    record[cur][rcur] = malloc(sizeof(struct pair));
+                    record[cur][rcur]->left = cur;
+                    record[cur][rcur]->right = rcur;
+                }
+                else
+                {
+                    record[cur][rcur] = malloc(sizeof(struct pair));
+                    record[cur][rcur]->left = cur;
+                    record[cur][rcur]->right = cur;
                 }
             }
-            right--;
+            else
+            {
+                struct pair *inner = record[cur + 1][rcur - 1];
+                if (s[cur] == s[rcur] && inner->left == cur + 1 && inner->right == rcur - 1)
+                {
+                    record[cur][rcur] = malloc(sizeof(struct pair));
+                    record[cur][rcur]->left = cur;
+                    record[cur][rcur]->right = rcur;
+                }
+                else
+                {
+                    struct pair *left = record[cur][rcur - 1];
+                    struct pair *right = record[cur + 1][rcur];
+                    int llen = left->right - left->left;
+                    int rlen = right->right - right->left;
+                    int ilen = inner->right - inner->left;
+                    if (llen >= rlen && llen > ilen)
+                    {
+                        record[cur][rcur] = left;
+                    }
+                    else if (rlen > llen && rlen > ilen)
+                    {
+                        record[cur][rcur] = right;
+                    }
+                    else
+                    {
+                        record[cur][rcur] = inner;
+                    }
+                }
+            }
+            cur++;
         }
-        left++;
-        right = length - 1;
+        cur = 0;
+        distance++;
     }
-    char *ret = malloc(sizeof(char) * (retRight - retLeft + 2));
-    strncpy(ret, s + retLeft, retRight - retLeft + 1);
-    ret[retRight - retLeft + 1] = '\0';
+
+    struct pair *ret_pair = record[0][length - 1];
+    char *ret = malloc(sizeof(char) * (ret_pair->right - ret_pair->left + 2));
+    strncpy(ret, s + ret_pair->left, ret_pair->right - ret_pair->left + 1);
+    ret[ret_pair->right - ret_pair->left + 1] = '\0';
     return ret;
 }
-
-// struct pair
-// {
-//     int left;
-//     int right;
-// };
-
-// struct pair ***generate(int length)
-// {
-//     struct pair **ret_one = malloc(sizeof(struct pair) * length);
-//     for (int i = 0; i < length; i++)
-//     {
-//         ret_one[i] = NULL;
-//     }
-//     struct pair ***ret = malloc(sizeof(ret_one) * length);
-//     ret[0] = ret_one;
-//     for (int i = 1; i < length; i++)
-//     {
-//         ret[i] = malloc(sizeof(struct pair) * length);
-//         for (int j = 0; j < length; j++)
-//         {
-//             ret[i][j] = NULL;
-//         }
-//     }
-//     return ret;
-// }
-
-// struct pair *longestPalindrome_recursion(char *s, struct pair ***record, int left, int right)
-// {
-//     if (record[left][right] != NULL)
-//     {
-//         return record[left][right];
-//     }
-
-//     record[left][right] = malloc(sizeof(struct pair));
-
-//     if (left == right)
-//     {
-
-//         record[left][right]->left = left;
-//         record[left][right]->right = right;
-//         return record[left][right];
-//     }
-
-//     if (left + 1 == right)
-//     {
-//         if (s[left] == s[right])
-//         {
-//             record[left][right]->left = left;
-//             record[left][right]->right = right;
-//         }
-//         else
-//         {
-//             record[left][right]->left = left;
-//             record[left][right]->right = left;
-//         }
-//         return record[left][right];
-//     }
-
-//     struct pair *next = longestPalindrome_recursion(s, record, left + 1, right - 1);
-//     if (s[left] == s[right] && next->left == left + 1 && next->right == right - 1)
-//     {
-//         record[left][right]->left = left;
-//         record[left][right]->right = right;
-//     }
-//     else
-//     {
-//         struct pair *leftPalindrome = longestPalindrome_recursion(s, record, left, right - 1);
-//         struct pair *rightPalindrome = longestPalindrome_recursion(s, record, left + 1, right);
-
-//         int nextLen = next->right - next->left;
-//         int leftLen = leftPalindrome->right - leftPalindrome->left;
-//         int rightLen = rightPalindrome->right - rightPalindrome->left;
-//         if (leftLen >= rightLen && leftLen > nextLen)
-//         {
-//             record[left][right] = leftPalindrome;
-//         }
-//         else if (rightLen > leftLen && rightLen > nextLen)
-//         {
-//             record[left][right] = rightPalindrome;
-//         }
-//         else
-//         {
-//             record[left][right] = next;
-//         }
-//     }
-//     return record[left][right];
-// }
-
-// char *longestPalindrome(char *s)
-// {
-//     int length = strlen(s);
-//     struct pair ***record = generate(length);
-//     struct pair *retPair = longestPalindrome_recursion(s, record, 0, length - 1);
-//     char *ret = malloc(sizeof(char) * (retPair->right - retPair->left + 2));
-//     strncpy(ret, s + retPair->left, retPair->right - retPair->left + 1);
-//     ret[retPair->right - retPair->left + 1] = '\0';
-//     return ret;
-// }
 
 // @lc code=end
 
