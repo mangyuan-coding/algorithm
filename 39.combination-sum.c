@@ -46,11 +46,12 @@ int **combinationSum(int *candidates, int candidatesSize, int target, int *retur
                 }
 
                 ret[(*returnSize)++] = (int *)malloc(sizeof(int) * sum_fac);
+                *(returnColumnSizes[*returnSize - 1]) = 0;
                 for (int i = 0; i <= idx; i++)
                 {
                     for (int j = 0; j < factors[i]; j++)
                     {
-                        ret[*returnSize - 1][(*returnColumnSizes)[*returnSize - 1]++] = candidates[i];
+                        ret[*returnSize - 1][(*(returnColumnSizes[*returnSize - 1]))++] = candidates[i];
                     }
                 }
             }
@@ -85,9 +86,10 @@ int **combinationSum(int *candidates, int candidatesSize, int target, int *retur
 int main(int argc, char const *argv[])
 {
     int candidates[] = {2, 3, 6, 7};
-    int *returnSize = (int *)malloc(sizeof(int) * 2);
-    int **returnColumnSizes = (int **)malloc(sizeof(int *));
+    int *returnSize = (int *)malloc(sizeof(int));
+    int **returnColumnSizes = (int **)malloc(sizeof(int *) * 2);
     returnColumnSizes[0] = (int *)malloc(sizeof(int));
+    returnColumnSizes[1] = (int *)malloc(sizeof(int));
     int **ret = combinationSum(candidates, 4, 7, returnSize, returnColumnSizes);
     for (int i = 0; i < *returnSize; i++)
     {
