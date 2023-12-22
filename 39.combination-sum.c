@@ -35,31 +35,34 @@ int **combinationSum(int *candidates, int candidatesSize, int target, int *retur
         sum_fac += factor;
         sum += factor * candidates[idx];
 
-        if (sum == target)
+        if (sum >= target)
         {
-            if (*returnSize > base)
+            if (sum == target)
             {
-                base *= 1.5;
-                ret = (int **)realloc(ret, sizeof(int *) * base);
-            }
-
-            ret[(*returnSize)++] = (int *)malloc(sizeof(int) * sum_fac);
-            for (int i = 0; i <= idx; i++)
-            {
-                for (int j = 0; j < factors[i]; j++)
+                if (*returnSize > base)
                 {
-                    ret[*returnSize - 1][*returnColumnSizes[*returnSize - 1]] = candidates[i];
+                    base *= 1.5;
+                    ret = (int **)realloc(ret, sizeof(int *) * base);
+                }
+
+                ret[(*returnSize)++] = (int *)malloc(sizeof(int) * sum_fac);
+                for (int i = 0; i <= idx; i++)
+                {
+                    for (int j = 0; j < factors[i]; j++)
+                    {
+                        ret[*returnSize - 1][(*returnColumnSizes)[*returnSize - 1]++] = candidates[i];
+                    }
                 }
             }
-        }
-        else if (sum > target)
-        {
             if (idx == 0)
             {
                 break;
             }
             sum_fac -= factor;
             sum -= factor * candidates[idx];
+            factors[idx] = 0;
+            sum_fac -= factors[idx - 1];
+            sum -= factors[idx - 1] * candidates[idx - 1];
             factors[--idx]++;
         }
         else
