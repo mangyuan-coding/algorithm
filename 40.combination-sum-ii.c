@@ -56,59 +56,60 @@ int **combinationSum2(int *candidates, int candidatesSize, int target, int *retu
     int *pre_sum = (int *)malloc(sizeof(int)), *cur_sum;
     int *pre_col_size = (int *)malloc(sizeof(int)), *cur_col_size;
     // init pre
-    pre_size = 1;
-    pre[0] = (int *)malloc(sizeof(int));
-    pre[0][0] = candidates[0];
-    pre_sum[0] = candidates[0];
-    pre_col_size[0] = 1;
+    pre_size = 0, cur_size = 0;
 
+    // same num size
     int same_size = 1;
 
     for (int i = 0; i < candidatesSize; i++)
     {
-        int num = candidates[i];
-
-        if (num == candidates[i + 1] && i < candidatesSize - 1)
+        if (i < candidatesSize - 1 && candidates[i] == candidates[i + 1])
         {
             same_size++;
             continue;
         }
 
-        if (num == target)
+        int cur_max_size = pre_size * same_size + pre_size + same_size;
+        cur = (int **)malloc(sizeof(int *) * cur_max_size);
+        cur_col_size = (int *)malloc(sizeof(int) * cur_max_size);
+        cur_sum = (int *)malloc(sizeof(int) * cur_max_size);
+
+        for (int size = 1; size <= same_size; size++)
         {
-            // add to ret
-            if (*returnSize == base)
+            int sum = size * candidates[i];
+            if (sum == target)
             {
-                base *= 1.5;
-                ret = (int **)realloc(ret, sizeof(int *) * base);
-                *returnColumnSizes = (int *)realloc(*returnColumnSizes, sizeof(int) * base);
+                // add to ret
+                if (*returnSize == base)
+                {
+                    base *= 1.5;
+                    ret = (int **)realloc(ret, sizeof(int *) * base);
+                    *returnColumnSizes = (int *)realloc(*returnColumnSizes, sizeof(int) * base);
+                }
+                (*returnSize)++;
+                (*returnColumnSizes)[*returnSize - 1] = size;
+                ret[*returnSize - 1] = (int *)malloc(sizeof(int) * size);
+                for (int k = 0; k < size; k++)
+                {
+                    ret[*returnSize - 1][k] = candidates[i];
+                }
+                break;
             }
-            (*returnSize)++;
-            (*returnColumnSizes)[*returnSize - 1] = 1;
-            ret[*returnSize - 1] = (int *)malloc(sizeof(int));
-            ret[*returnSize - 1][0] = num;
-            break;
-        }
-        if (num > target)
-        {
-            break;
-        }
-
-        cur = (int **)malloc(sizeof(int *) * (pre_size * 2 + 1));
-        cur_col_size = (int *)malloc(sizeof(int) * (pre_size * 2 + 1));
-        cur_sum = (int *)malloc(sizeof(int) * (pre_size * 2 + 1));
-
-        if (candidates[i] != candidates[i - 1])
-        {
-            cur_size = 1;
-            cur_col_size[cur_size - 1] = 1;
-            cur_sum[cur_size - 1] = num;
-            cur[cur_size - 1] = (int *)malloc(sizeof(int));
-            cur[cur_size - 1][0] = num;
-        }
-        else
-        {
-            cur_size = 0;
+            else if (sum < target)
+            {
+                cur_size++;
+                cur_col_size[cur_size - 1] = size;
+                cur_sum[cur_size - 1] = sum;
+                cur[cur_size - 1] = (int *)malloc(sizeof(int) * size);
+                for (int k = 0; k < size; k++)
+                {
+                    cur[cur_size - 1][k] = candidates[i];
+                }
+            }
+            else
+            {
+                break;
+            }
         }
 
         for (int j = 0; j < pre_size; j++)
@@ -118,30 +119,43 @@ int **combinationSum2(int *candidates, int candidatesSize, int target, int *retu
             cur_sum[cur_size - 1] = pre_sum[j];
             cur[cur_size - 1] = (int *)malloc(sizeof(int) * pre_col_size[j]);
             memcpy(cur[cur_size - 1], pre[j], sizeof(int) * pre_col_size[j]);
+        }
 
-            if (pre_sum[j] + num < target)
+        for (int size = 1; size <= same_size; size++)
+        {
+            int sum = size * candidates[i];
+            for (int j = 0; j < pre_size; j++)
             {
-                cur_size++;
-                cur_col_size[cur_size - 1] = pre_col_size[j] + 1;
-                cur_sum[cur_size - 1] = pre_sum[j] + num;
-                cur[cur_size - 1] = (int *)malloc(sizeof(int) * (pre_col_size[j] + 1));
-                memcpy(cur[cur_size - 1], pre[j], sizeof(int) * pre_col_size[j]);
-                cur[cur_size - 1][cur_col_size[cur_size - 1] - 1] = num;
-            }
-            else if (pre_sum[j] + num == target)
-            {
-                // add to result
-                if (*returnSize == base)
+                if (pre_sum[j] + sum < target)
                 {
-                    base *= 1.5;
-                    ret = (int **)realloc(ret, sizeof(int *) * base);
-                    *returnColumnSizes = (int *)realloc(*returnColumnSizes, sizeof(int) * base);
+                    cur_size++;
+                    cur_col_size[cur_size - 1] = pre_col_size[j] + size;
+                    cur_sum[cur_size - 1] = pre_sum[j] + sum;
+                    cur[cur_size - 1] = (int *)malloc(sizeof(int) * cur_col_size[cur_size - 1]);
+                    memcpy(cur[cur_size - 1], pre[j], sizeof(int) * pre_col_size[j]);
+                    for (int k = 0; k < size; k++)
+                    {
+                        cur[cur_size - 1][pre_col_size[j] + k] = candidates[i];
+                    }
                 }
-                (*returnSize)++;
-                (*returnColumnSizes)[*returnSize - 1] = pre_col_size[j] + 1;
-                ret[*returnSize - 1] = (int *)malloc(sizeof(int) * (*returnColumnSizes)[*returnSize - 1]);
-                memcpy(ret[*returnSize - 1], pre[j], sizeof(int) * pre_col_size[j]);
-                ret[*returnSize - 1][(*returnColumnSizes)[*returnSize - 1] - 1] = num;
+                else if (pre_sum[j] + sum == target)
+                {
+                    // add to result
+                    if (*returnSize == base)
+                    {
+                        base *= 1.5;
+                        ret = (int **)realloc(ret, sizeof(int *) * base);
+                        *returnColumnSizes = (int *)realloc(*returnColumnSizes, sizeof(int) * base);
+                    }
+                    (*returnSize)++;
+                    (*returnColumnSizes)[*returnSize - 1] = pre_col_size[j] + size;
+                    ret[*returnSize - 1] = (int *)malloc(sizeof(int) * (*returnColumnSizes)[*returnSize - 1]);
+                    memcpy(ret[*returnSize - 1], pre[j], sizeof(int) * pre_col_size[j]);
+                    for (int k = 0; k < size; k++)
+                    {
+                        ret[*returnSize - 1][pre_col_size[j] + k] = candidates[i];
+                    }
+                }
             }
         }
 
@@ -158,6 +172,8 @@ int **combinationSum2(int *candidates, int candidatesSize, int target, int *retu
         cur = NULL;
         cur_sum = NULL;
         cur_col_size = NULL;
+
+        same_size = 1;
     }
 
     return ret;
@@ -167,10 +183,10 @@ int **combinationSum2(int *candidates, int candidatesSize, int target, int *retu
 
 int main(int argc, char const *argv[])
 {
-    int candidates[] = {4, 4, 2, 1, 4, 2, 2, 1, 3};
+    int candidates[] = {10, 1, 2, 7, 6, 1, 5};
     int *returnSize = (int *)malloc(sizeof(int));
     int **returnColumnSizes = (int **)malloc(sizeof(int *));
-    int **ret = combinationSum2(candidates, 9, 6, returnSize, returnColumnSizes);
+    int **ret = combinationSum2(candidates, 7, 8, returnSize, returnColumnSizes);
     for (int i = 0; i < *returnSize; i++)
     {
         printf("i[%d] is [", i);
