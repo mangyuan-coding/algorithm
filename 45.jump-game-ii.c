@@ -9,42 +9,47 @@
 
 int jump(int *nums, int numsSize)
 {
-    int *trace = (int *)malloc(sizeof(int) * numsSize);
-    int cur_step = 0;
+    int *each_step_distance = (int *)malloc(sizeof(int) * numsSize);
+    int step = 0;
 
     int min_step = numsSize;
 
     int idx = 0;
     while (1)
     {
-        int num = nums[idx];
-        if (num + idx > numsSize)
+        if (idx >= numsSize - 1)
         {
-            if (cur_step + 1 < min_step)
+            if (step < min_step)
             {
-                min_step = cur_step + 1;
+                min_step = step;
             }
 
-            while (cur_step >= 0)
+            // back
+            // last step distance == 1
+            while (each_step_distance[step - 1] == 1 && step > 0)
             {
-                if (trace[cur_step] > 1)
-                {
-                    trace[cur_step]--;
-                    idx--;
-                    break;
-                }
-                idx -= trace[cur_step];
-                cur_step--;
+                idx -= each_step_distance[step - 1];
+                each_step_distance[step - 1] = 0;
+                step--;
             }
-            if (cur_step == 0 && trace[cur_step] == 0)
+
+            // no route
+            if (step == 0)
             {
-                break;
+                return min_step;
             }
+
+            // distance - 1
+            each_step_distance[step - 1]--;
+            idx--;
         }
         else
         {
-            trace[cur_step++] = num;
-            idx += num;
+            // step to next
+            int distance = nums[idx];
+            step++;
+            each_step_distance[step - 1] = distance;
+            idx += distance;
         }
     }
 
