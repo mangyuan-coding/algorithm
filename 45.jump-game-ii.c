@@ -9,58 +9,40 @@
 
 int jump(int *nums, int numsSize)
 {
-    int *each_step_distance = (int *)malloc(sizeof(int) * numsSize);
-    int step = 0;
 
-    int min_step = numsSize;
-
-    int idx = 0;
-    while (1)
+    int *each_min_step = (int *)malloc(sizeof(int) * numsSize);
+    for (int i = 0; i < numsSize; i++)
     {
-        if (idx >= numsSize - 1)
+        each_min_step[i] = numsSize;
+    }
+
+    each_min_step[0] = 0;
+
+    for (int i = 0; i < numsSize; i++)
+    {
+        int cur_min_step = each_min_step[i];
+        int max_distance = nums[i];
+        for (int step_distance = 1; step_distance <= max_distance; step_distance++)
         {
-            if (step < min_step)
+            if (i + step_distance >= numsSize)
             {
-                min_step = step;
+                break;
             }
-
-            // back
-            // last step distance == 1
-            while (each_step_distance[step - 1] == 1 && step > 0)
+            if (each_min_step[i + step_distance] > cur_min_step + 1)
             {
-                idx -= each_step_distance[step - 1];
-                each_step_distance[step - 1] = 0;
-                step--;
+                each_min_step[i + step_distance] = cur_min_step + 1;
             }
-
-            // no route
-            if (step == 0)
-            {
-                return min_step;
-            }
-
-            // distance - 1
-            each_step_distance[step - 1]--;
-            idx--;
-        }
-        else
-        {
-            // step to next
-            int distance = nums[idx];
-            step++;
-            each_step_distance[step - 1] = distance;
-            idx += distance;
         }
     }
 
-    return min_step;
+    return each_min_step[numsSize - 1];
 }
 // @lc code=end
 #include <stdio.h>
 
 int main(int argc, char const *argv[])
 {
-    int nums[] = {2, 3, 1, 1, 4};
-    printf("%d", jump(nums, 5));
+    int nums[] = {5, 6, 4, 4, 6, 9, 4, 4, 7, 4, 4, 8, 2, 6, 8, 1, 5, 9, 6, 5, 2, 7, 9, 7, 9, 6, 9, 4, 1, 6, 8, 8, 4, 4, 2, 0, 3, 8, 5};
+    printf("%d", jump(nums, 39));
     return 0;
 }
