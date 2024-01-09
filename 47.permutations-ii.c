@@ -99,34 +99,17 @@ struct distribution *distribute(int target_n)
     return distributions[target_n - 1];
 }
 
-int **build_trace(int a_size, int b_size)
+int compare(const void *a, const void *b)
 {
-    int size = a_size + b_size;
-    int **trace = (int **)malloc(sizeof(int *) * size);
-    int trace_size = 1;
+    int int_a = *((int *)a);
+    int int_b = *((int *)b);
 
-    int idx_a = a_size - 1, idx_b = b_size - 1, idx = size - 1;
-
-    while (1)
-    {
-        if (idx > 0)
-        {
-            if (idx_a >= 0)
-            {
-                trace[trace_size - 1][idx--] = 1;
-                idx_a--;
-            }
-            else
-            {
-                trace[trace_size - 1][idx--] = 0;
-                idx_b--;
-            }
-        }
-        else
-        {
-            
-        }
-    }
+    if (int_a == int_b)
+        return 0;
+    else if (int_a < int_b)
+        return -1;
+    else
+        return 1;
 }
 
 int **permuteUnique(int *nums, int numsSize, int *returnSize, int **returnColumnSizes)
@@ -145,6 +128,8 @@ int **permuteUnique(int *nums, int numsSize, int *returnSize, int **returnColumn
     {
         return ret;
     }
+
+    qsort(nums, numsSize, sizeof(int), compare);
 
     int **pre = NULL;
     int pre_size = 0;
@@ -172,28 +157,132 @@ int **permuteUnique(int *nums, int numsSize, int *returnSize, int **returnColumn
         else
         {
             *returnSize = 0;
-            struct distribution *n_distribution = distribute(same_num_size);
-
-            for (int postion_size = 1; postion_size <= same_num_size; postion_size++)
+            if (same_num_size == 1)
             {
-                struct distribution cur_distribution = n_distribution[postion_size - 1];
+                ret = (int **)malloc(sizeof(int *) * (pre_size * (i + 1)));
+                for (int j = 0; j < pre_size; j++)
+                {
+                    for (int k = 0; k <= i; k++)
+                    {
+                        (*returnSize)++;
+                        ret[*returnSize - 1] = (int *)malloc(sizeof(int) * (i + 1));
+                        ret[*returnSize - 1][k] = num;
+                        if (k == 0)
+                        {
+                            memcpy(ret[*returnSize - 1] + 1, pre[j], sizeof(int) * i);
+                        }
+                        else if (k == i)
+                        {
+                            memcpy(ret[*returnSize - 1], pre[j], sizeof(int) * i);
+                        }
+                        else
+                        {
+                            memcpy(ret[*returnSize - 1], pre[j], sizeof(int) * k);
+                            memcpy(ret[*returnSize - 1] + k + 1, pre[j] + k, sizeof(int) * (i - k));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                int base = 1000;
+                ret = (int **)malloc(sizeof(int *) * base);
+                struct distribution *n_distribution = distribute(same_num_size);
+                struct distribution cur_distribution = n_distribution[same_num_size - 1];
 
                 for (int idx_of_group = 0; idx_of_group < cur_distribution.group_size; idx_of_group++)
                 {
                     struct group cur_group = cur_distribution.groups[idx_of_group];
 
-                    int total_num_size = pre_size;
-                    for (int idx_of_cur_group = 0; idx_of_cur_group < cur_group.num_size; idx_of_cur_group++)
+                    int total_num_size = i + 1;
+
+                    for (int idx_of_pre = 0; idx_of_pre < pre_size; idx_of_pre++)
                     {
-                        total_num_size += cur_group.nums[idx_of_cur_group];
+                        int *pre_nums = pre[idx_of_pre];
+
+                        int total_positions = i - same_num_size + 1 + cur_group.num_size;
+                        int idx_of_pre_nums = i - same_num_size;
+                        int idx_of_cur_group = cur_group.num_size - 1;
+                        int idx_of_position = total_positions - 1;
+
+                        // 1 == pre, 0 == group
+                        int *trace = (int *)malloc(sizeof(int) * total_positions);
+
+                        int idx_of_ret_nums = total_num_size - 1;
+                        (*returnSize)++;
+                        ret[*returnSize - 1] = (int *)malloc(sizeof(int) * total_num_size);
+
+                        while (1)
+                        {
+                            if (idx_of_position >= 0)
+                            {
+                                if (idx_of_pre_nums >= 0)
+                                {
+                                    ret[*returnSize - 1][idx_of_ret_nums--] = pre[idx_of_pre][idx_of_pre_nums];
+                                    trace[idx_of_position] = 1;
+                                    idx_of_position--;
+                                    idx_of_pre_nums--;
+                                }
+                                else
+                                {
+                                    for (int idx_of_nums = 0; idx_of_nums < cur_group.nums[idx_of_cur_group]; idx_of_nums++)
+                                    {
+                                        ret[*returnSize - 1][idx_of_ret_nums--] = num;
+                                    }
+                                    trace[idx_of_position] = 0;
+                                    idx_of_position--;
+                                    idx_of_cur_group--;
+                                }
+                            }
+                            else
+                            {
+                                while (idx_of_position < total_positions - 1)
+                                {
+                                    if (trace[idx_of_position + 1] == 1 && idx_of_cur_group >= 0)
+                                    {
+                                        idx_of_position++;
+                                        idx_of_ret_nums++;
+                                        idx_of_pre_nums++;
+                                        break;
+                                    }
+                                    else
+                                    {
+                                        if (trace[idx_of_position + 1] == 0)
+                                        {
+                                            idx_of_ret_nums += cur_group.nums[idx_of_cur_group + 1];
+                                            idx_of_cur_group++;
+                                        }
+                                        else
+                                        {
+                                            idx_of_ret_nums++;
+                                            idx_of_pre_nums++;
+                                        }
+                                        idx_of_position++;
+                                    }
+                                }
+                                if (idx_of_position == total_positions - 1 && trace[idx_of_position] == 0)
+                                {
+                                    break;
+                                }
+                                (*returnSize)++;
+                                if (*returnSize == base)
+                                {
+                                    base *= 1.5;
+                                    ret = (int **)realloc(ret, sizeof(int *) * base);
+                                }
+                                ret[*returnSize - 1] = (int *)malloc(sizeof(int) * total_num_size);
+                                memcpy(ret[*returnSize - 1], ret[*returnSize - 2], sizeof(int) * (i + 1));
+
+                                for (int idx_of_nums = 0; idx_of_nums < cur_group.nums[idx_of_cur_group]; idx_of_nums++)
+                                {
+                                    ret[*returnSize - 1][idx_of_ret_nums--] = num;
+                                }
+                                trace[idx_of_position] = 0;
+                                idx_of_position--;
+                                idx_of_cur_group--;
+                            }
+                        }
                     }
-
-                    int idx_of_position = cur_group.num_size + pre_size - 1;
-                    int idx_of_cur_group = cur_group.num_size - 1;
-                    int idx_of_pre = pre_size - 1;
-
-                    // 1 == pre, 0 == group
-                    int *trace = (int *)malloc(sizeof(int) * cur_group.num_size + pre_size);
                 }
             }
         }
@@ -219,43 +308,18 @@ int **permuteUnique(int *nums, int numsSize, int *returnSize, int **returnColumn
 
 int main(int argc, char const *argv[])
 {
-    // int nums[4] = {2, 2, 1, 1};
-    // int *returnSize = (int *)malloc(sizeof(int));
-    // int **returnColumnSizes = (int **)malloc(sizeof(int *));
-    // int **ret = permuteUnique(nums, 4, returnSize, returnColumnSizes);
-    // for (int i = 0; i < *returnSize; i++)
-    // {
-    //     printf("i is %d, [", i);
-    //     for (int j = 0; j < (*returnColumnSizes)[i]; j++)
-    //     {
-    //         printf("%d,", ret[i][j]);
-    //     }
-    //     printf("] \n");
-    // }
-
-    int n = 4;
-    struct distribution *n_distribution = distribute(n);
-
-    for (int position = 1; position <= n; position++)
+    int nums[8] = {-1, 2, -1, 2, 1, -1, 2, 1};
+    int *returnSize = (int *)malloc(sizeof(int));
+    int **returnColumnSizes = (int **)malloc(sizeof(int *));
+    int **ret = permuteUnique(nums, 8, returnSize, returnColumnSizes);
+    for (int i = 0; i < *returnSize; i++)
     {
-        struct distribution cur_distribution = n_distribution[position - 1];
-        printf("cur position is %d [ ", position);
-        for (int idx_of_groups = 0; idx_of_groups < cur_distribution.group_size; idx_of_groups++)
+        printf("i is %d, [", i);
+        for (int j = 0; j < (*returnColumnSizes)[i]; j++)
         {
-            struct group cur_group = cur_distribution.groups[idx_of_groups];
-            printf("cur group is %d [ ", idx_of_groups + 1);
-            for (int idx_of_nums = 0; idx_of_nums < cur_group.num_size; idx_of_nums++)
-            {
-                printf("%d", cur_group.nums[idx_of_nums]);
-                if (idx_of_nums != cur_group.num_size - 1)
-                {
-                    printf(",");
-                }
-            }
-
-            printf(" ] ,");
+            printf("%d,", ret[i][j]);
         }
-        printf(" ] \n");
+        printf("] \n");
     }
 
     return 0;
