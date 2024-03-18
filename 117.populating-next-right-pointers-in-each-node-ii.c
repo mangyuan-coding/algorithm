@@ -1,12 +1,9 @@
 /*
- * @lc app=leetcode.cn id=116 lang=c
+ * @lc app=leetcode.cn id=117 lang=c
  *
- * [116] Populating Next Right Pointers in Each Node
+ * [117] Populating Next Right Pointers in Each Node II
  */
-
 #include <stdlib.h>
-#include <stdio.h>
-
 typedef struct Node
 {
     int val;
@@ -14,7 +11,6 @@ typedef struct Node
     struct Node *right;
     struct Node *next;
 } Node;
-
 // @lc code=start
 /**
  * Definition for a Node.
@@ -28,7 +24,7 @@ typedef struct Node
 
 struct Node *connect(struct Node *root)
 {
-    if (root == NULL || root->left == NULL)
+    if (root == NULL)
     {
         return root;
     }
@@ -42,17 +38,22 @@ struct Node *connect(struct Node *root)
         cur_level = (struct Node **)malloc(sizeof(struct Node *) * 2 * pre_level_size);
         for (int i = 0; i < pre_level_size; i++)
         {
-            if (pre_level[i]->left == NULL)
+            if (pre_level[i]->left != NULL)
             {
-                continue;
+                cur_level[cur_level_size++] = pre_level[i]->left;
+                if (cur_level_size > 1)
+                {
+                    cur_level[cur_level_size - 2]->next = cur_level[cur_level_size - 1];
+                }
             }
-            cur_level[cur_level_size++] = pre_level[i]->left;
-            cur_level[cur_level_size++] = pre_level[i]->right;
-            if (cur_level_size > 2)
+            if (pre_level[i]->right != NULL)
             {
-                cur_level[cur_level_size - 3]->next = cur_level[cur_level_size - 2];
+                cur_level[cur_level_size++] = pre_level[i]->right;
+                if (cur_level_size > 1)
+                {
+                    cur_level[cur_level_size - 2]->next = cur_level[cur_level_size - 1];
+                }
             }
-            cur_level[cur_level_size - 2]->next = cur_level[cur_level_size - 1];
         }
         free(pre_level);
         if (cur_level_size == 0)
