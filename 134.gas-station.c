@@ -18,6 +18,7 @@ int canCompleteCircuit(int *gas, int gasSize, int *cost, int costSize)
             start++;
             continue;
         }
+
         int travel = (start == gasSize - 1) ? 0 : start + 1;
         while (travel != start)
         {
@@ -41,6 +42,10 @@ int canCompleteCircuit(int *gas, int gasSize, int *cost, int costSize)
             return start;
         }
 
+        if (travel < start)
+        {
+            return -1;
+        }
         start = travel + 1;
     }
 
